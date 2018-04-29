@@ -32,9 +32,11 @@ public class Wallet extends Applet {
     final static byte GET_BALANCE = (byte) 0x50;
 
     // maximum balance
-    final static short MAX_BALANCE = 0x7FFF;
+    final static short MAX_BALANCE = 10000;
     // maximum transaction amount
-    final static byte MAX_TRANSACTION_AMOUNT = 127;
+    final static short MAX_TRANSACTION_AMOUNT = 1000;
+    // maximum loyalty points count
+    final static short MAX_LOYALTY_POINTS_COUNT = 1000;
 
     // maximum number of incorrect tries before the
     // PIN is blocked
@@ -55,10 +57,13 @@ public class Wallet extends Applet {
     final static short SW_EXCEED_MAXIMUM_BALANCE = 0x6A84;
     // signal the the balance becomes negative
     final static short SW_NEGATIVE_BALANCE = 0x6A85;
+    // signal the the balance becomes negative
+    final static short SW_INVALID_GET_BALANCE_PARAMETER = 0x6A86;
 
     /* instance variables declaration */
     OwnerPIN pin;
     short balance;
+    short loyaltyPointsCount;
 
     private Wallet(byte[] bArray, short bOffset, byte bLength) {
 
@@ -234,32 +239,73 @@ public class Wallet extends Applet {
     } // end of debit method
 
     private void getBalance(APDU apdu) {
+    	balance = 10;
+    	loyaltyPointsCount = 11;
+    	
 
         byte[] buffer = apdu.getBuffer();
 
+        byte byteRead = (byte) (apdu.setIncomingAndReceive());
+        
         // inform system that the applet has finished
         // processing the command and the system should
         // now prepare to construct a response APDU
         // which contains data field
         short le = apdu.setOutgoing();
+        byte command = buffer[ISO7816.OFFSET_CDATA];
 
-        if (le < 2) {
-            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+        if (command == 0) {
+            if (le != 4) {
+                ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            }
+
+            // informs the CAD the actual number of bytes
+            // returned
+            apdu.setOutgoingLength((byte) 4);
+
+            // move the balance data into the APDU buffer
+            // starting at the offset 0
+            
+            buffer[0] = (byte) (balance >> 8);
+            buffer[1] = (byte) (balance & 0xFF);
+            buffer[2] = (byte) (loyaltyPointsCount >> 8);
+            buffer[3] = (byte) (loyaltyPointsCount & 0xFF);
+            
+            // send the 4-byte balance at the offset
+            // 0 in the apdu buffer
+            apdu.sendBytes((short) 0, (short) 4);
+        } else {
+            if (le != 2) {
+                ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            }
+
+            // informs the CAD the actual number of bytes
+            // returned
+            apdu.setOutgoingLength((byte) 2);
+
+            // move the balance data into the APDU buffer
+            // starting at the offset 0
+            
+            if (command == 1) {
+                buffer[0] = (byte) (balance >> 8);
+                buffer[1] = (byte) (balance & 0xFF);
+                
+                // send the 2-byte balance at the offset
+                // 0 in the apdu buffer
+                apdu.sendBytes((short) 0, (short) 2);
+            } else {
+            	if (command == 2) {
+                    buffer[0] = (byte) (loyaltyPointsCount >> 8);
+                    buffer[1] = (byte) (loyaltyPointsCount & 0xFF);
+                    
+                    // send the 2-byte loyaltyPointsCount at the offset
+                    // 0 in the apdu buffer
+                    apdu.sendBytes((short) 0, (short) 2);
+            	} else {
+            		ISOException.throwIt(SW_INVALID_GET_BALANCE_PARAMETER);
+            	}
+            }
         }
-
-        // informs the CAD the actual number of bytes
-        // returned
-        apdu.setOutgoingLength((byte) 2);
-
-        // move the balance data into the APDU buffer
-        // starting at the offset 0
-        buffer[0] = (byte) (balance >> 8);
-        buffer[1] = (byte) (balance & 0xFF);
-
-        // send the 2-byte balance at the offset
-        // 0 in the apdu buffer
-        apdu.sendBytes((short) 0, (short) 2);
-
     } // end of getBalance method
 
     private void verify(APDU apdu) {
