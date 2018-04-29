@@ -1,5 +1,5 @@
 // converted by version  [v3.0.5]
-// on Sun Apr 29 09:05:55 EEST 2018
+// on Sun Apr 29 16:50:56 EEST 2018
 
 .package com/sun/jcclassic/samples/wallet {
 	.aid 0xA0:0x0:0x0:0x0:0x62:0x3:0x1:0xC:0x6;
@@ -88,7 +88,7 @@
 			static final byte GET_BALANCE = 80;		// B
 			static final short MAX_BALANCE = 10000;		// S
 			static final short MAX_TRANSACTION_AMOUNT = 1000;		// S
-			static final short MAX_LOYALTY_POINTS_COUNT = 1000;		// S
+			static final short MAX_LOYALTY_POINTS_COUNT = 300;		// S
 			static final byte PIN_TRY_LIMIT = 3;		// B
 			static final byte MAX_PIN_SIZE = 8;		// B
 			static final short SW_VERIFICATION_FAILED = 25344;		// S
@@ -305,8 +305,8 @@
 		}
 
 		.method private debit(Ljavacard/framework/APDU;)V {
-			.stack 3;
-			.locals 4;
+			.stack 4;
+			.locals 9;
 
 			.descriptor	Ljavacard/framework/APDU;	0.10;
 
@@ -327,10 +327,10 @@
 					s2b;
 					sstore 4;
 				L5:	sload_3;
-					sconst_1;
+					sconst_4;
 					if_scmpne L7;
 				L6:	sload 4;
-					sconst_1;
+					sconst_4;
 					if_scmpeq L8;
 				L7:	sspush 26368;
 					invokestatic 12;		// javacard/framework/ISOException.throwIt(S)V
@@ -338,24 +338,68 @@
 					sconst_5;
 					baload;
 					sstore 5;
-				L9:	sload 5;
+				L9:	aload_2;
+					bspush 6;
+					baload;
+					sstore 6;
+				L10:	aload_2;
+					bspush 7;
+					baload;
+					sstore 7;
+				L11:	aload_2;
+					bspush 8;
+					baload;
+					sstore 8;
+				L12:	sload 5;
+					bspush 8;
+					sshl;
+					sload 6;
+					sor;
+					sstore 9;
+				L13:	sload 7;
+					bspush 8;
+					sshl;
+					sload 8;
+					sor;
+					sstore 10;
+				L14:	sload 9;
 					sspush 1000;
-					if_scmpgt L11;
-				L10:	sload 5;
-					ifge L12;
-				L11:	sspush 27267;
+					if_scmpgt L16;
+				L15:	sload 9;
+					ifge L17;
+				L16:	sspush 27267;
 					invokestatic 12;		// javacard/framework/ISOException.throwIt(S)V
-				L12:	getfield_s_this 1;		// short com/sun/jcclassic/samples/wallet/Wallet.balance
-					sload 5;
+				L17:	sload 10;
+					ifge L19;
+				L18:	sspush 27267;
+					invokestatic 12;		// javacard/framework/ISOException.throwIt(S)V
+				L19:	getfield_s_this 1;		// short com/sun/jcclassic/samples/wallet/Wallet.balance
+					sload 9;
 					ssub;
-					ifge L14;
-				L13:	sspush 27269;
+					iflt L21;
+				L20:	getfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+					sload 10;
+					ssub;
+					ifge L22;
+				L21:	sspush 27269;
 					invokestatic 12;		// javacard/framework/ISOException.throwIt(S)V
-				L14:	aload_0;
+				L22:	aload_0;
 					getfield_s_this 1;		// short com/sun/jcclassic/samples/wallet/Wallet.balance
-					sload 5;
+					sload 9;
 					ssub;
 					putfield_s 1;		// short com/sun/jcclassic/samples/wallet/Wallet.balance
+					aload_0;
+					getfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+					sload 10;
+					ssub;
+					putfield_s 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+					aload_0;
+					getfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+					sload 9;
+					bspush 10;
+					sdiv;
+					sadd;
+					putfield_s 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
 					return;
 		}
 
@@ -365,11 +409,7 @@
 
 			.descriptor	Ljavacard/framework/APDU;	0.10;
 
-				L0:	bspush 10;
-					putfield_s_this 1;		// short com/sun/jcclassic/samples/wallet/Wallet.balance
-					bspush 11;
-					putfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
-					aload_1;
+				L0:	aload_1;
 					invokevirtual 10;		// getBuffer()[B
 					astore_2;
 				L1:	aload_1;

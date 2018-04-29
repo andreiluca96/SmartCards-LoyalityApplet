@@ -36,7 +36,7 @@ public class Wallet extends Applet {
     // maximum transaction amount
     final static short MAX_TRANSACTION_AMOUNT = 1000;
     // maximum loyalty points count
-    final static short MAX_LOYALTY_POINTS_COUNT = 1000;
+    final static short MAX_LOYALTY_POINTS_COUNT = 300;
 
     // maximum number of incorrect tries before the
     // PIN is blocked
@@ -217,32 +217,40 @@ public class Wallet extends Applet {
 
         byte byteRead = (byte) (apdu.setIncomingAndReceive());
 
-        if ((numBytes != 1) || (byteRead != 1)) {
+        if ((numBytes != 4) || (byteRead != 4)) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
 
         // get debit amount
-        byte debitAmount = buffer[ISO7816.OFFSET_CDATA];
-
+        byte moneyDebit1 = buffer[ISO7816.OFFSET_CDATA];
+        byte moneyDebit2 = buffer[ISO7816.OFFSET_CDATA + 1];
+        byte loyaltyPointsPaid1 = buffer[ISO7816.OFFSET_CDATA + 2];
+        byte loyaltyPointsPaid2 = buffer[ISO7816.OFFSET_CDATA + 3];
+        
+        short moneyDebit = (short)((short)moneyDebit1 << 8 | moneyDebit2); 
+        short loyaltyPointsDebit = (short)((short)loyaltyPointsPaid1 << 8 | loyaltyPointsPaid2); 
+        
         // check debit amount
-        if ((debitAmount > MAX_TRANSACTION_AMOUNT) || (debitAmount < 0)) {
+        if ((moneyDebit > MAX_TRANSACTION_AMOUNT) || (moneyDebit < 0)) {
+            ISOException.throwIt(SW_INVALID_TRANSACTION_AMOUNT);
+        }
+        
+        // check debit amount
+        if (loyaltyPointsDebit < 0) {
             ISOException.throwIt(SW_INVALID_TRANSACTION_AMOUNT);
         }
 
         // check the new balance
-        if ((short) (balance - debitAmount) < (short) 0) {
+        if ((short) (balance - moneyDebit) < (short) 0 || (short) (loyaltyPointsCount - loyaltyPointsDebit) < (short) 0) {
             ISOException.throwIt(SW_NEGATIVE_BALANCE);
         }
 
-        balance = (short) (balance - debitAmount);
-
+        balance = (short) (balance - moneyDebit);
+        loyaltyPointsCount = (short) (loyaltyPointsCount - loyaltyPointsDebit);
+        loyaltyPointsCount = (short) (loyaltyPointsCount + moneyDebit / 10);
     } // end of debit method
 
     private void getBalance(APDU apdu) {
-    	balance = 10;
-    	loyaltyPointsCount = 11;
-    	
-
         byte[] buffer = apdu.getBuffer();
 
         byte byteRead = (byte) (apdu.setIncomingAndReceive());
