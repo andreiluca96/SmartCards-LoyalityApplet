@@ -1,5 +1,5 @@
 // converted by version  [v3.0.5]
-// on Sun Apr 29 16:50:56 EEST 2018
+// on Sun Apr 29 17:58:29 EEST 2018
 
 .package com/sun/jcclassic/samples/wallet {
 	.aid 0xA0:0x0:0x0:0x0:0x62:0x3:0x1:0xC:0x6;
@@ -351,15 +351,23 @@
 					baload;
 					sstore 8;
 				L12:	sload 5;
+					sspush 255;
+					sand;
 					bspush 8;
 					sshl;
 					sload 6;
+					sspush 255;
+					sand;
 					sor;
 					sstore 9;
 				L13:	sload 7;
+					sspush 255;
+					sand;
 					bspush 8;
 					sshl;
 					sload 8;
+					sspush 255;
+					sand;
 					sor;
 					sstore 10;
 				L14:	sload 9;
@@ -393,14 +401,24 @@
 					sload 10;
 					ssub;
 					putfield_s 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
-					aload_0;
+					getfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+					sload 9;
+					bspush 10;
+					sdiv;
+					sadd;
+					sspush 300;
+					if_scmpge L24;
+				L23:	aload_0;
 					getfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
 					sload 9;
 					bspush 10;
 					sdiv;
 					sadd;
 					putfield_s 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
-					return;
+					goto L25;
+				L24:	sspush 300;
+					putfield_s_this 2;		// short com/sun/jcclassic/samples/wallet/Wallet.loyaltyPointsCount
+				L25:	return;
 		}
 
 		.method private getBalance(Ljavacard/framework/APDU;)V {

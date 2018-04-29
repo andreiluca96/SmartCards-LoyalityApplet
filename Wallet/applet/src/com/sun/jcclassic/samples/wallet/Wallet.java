@@ -227,8 +227,8 @@ public class Wallet extends Applet {
         byte loyaltyPointsPaid1 = buffer[ISO7816.OFFSET_CDATA + 2];
         byte loyaltyPointsPaid2 = buffer[ISO7816.OFFSET_CDATA + 3];
         
-        short moneyDebit = (short)((short)moneyDebit1 << 8 | moneyDebit2); 
-        short loyaltyPointsDebit = (short)((short)loyaltyPointsPaid1 << 8 | loyaltyPointsPaid2); 
+        short moneyDebit = (short)((short)(moneyDebit1 & 0xFF) << 8 | (moneyDebit2 & 0xFF)); 
+        short loyaltyPointsDebit = (short)((short)(loyaltyPointsPaid1 & 0xFF) << 8 | (loyaltyPointsPaid2 & 0xFF)); 
         
         // check debit amount
         if ((moneyDebit > MAX_TRANSACTION_AMOUNT) || (moneyDebit < 0)) {
@@ -247,7 +247,13 @@ public class Wallet extends Applet {
 
         balance = (short) (balance - moneyDebit);
         loyaltyPointsCount = (short) (loyaltyPointsCount - loyaltyPointsDebit);
-        loyaltyPointsCount = (short) (loyaltyPointsCount + moneyDebit / 10);
+        
+        if ((short) (loyaltyPointsCount + moneyDebit / 10) < MAX_LOYALTY_POINTS_COUNT) {
+        	loyaltyPointsCount = (short) (loyaltyPointsCount + moneyDebit / 10);
+        } else {
+        	loyaltyPointsCount = MAX_LOYALTY_POINTS_COUNT;
+        }
+        
     } // end of debit method
 
     private void getBalance(APDU apdu) {
